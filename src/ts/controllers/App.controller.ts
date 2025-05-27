@@ -96,6 +96,7 @@ export class AppController {
   }
 
   removeShapeAndRedrawSimilar(shapeInstance: Shape): void {
+    this.removeShape(shapeInstance);
     this.redrawShapesOfType(shapeInstance.constructor);
   }
 
