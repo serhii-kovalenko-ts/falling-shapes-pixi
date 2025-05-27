@@ -38,7 +38,7 @@ export class ShapeFactory {
       case EShapes.Chaotic:
         return new Chaotic(position);
       default:
-        return new Hexagon(position);
+        return new Chaotic(position);
     }
   }
 }

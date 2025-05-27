@@ -50,7 +50,7 @@ export class AppController {
     );
 
     this.view.onCanvasClicked.subscribe((position: Point) =>
-      this.drawChaoticShape(position)
+      this.drawRandomShape(position)
     );
 
     this.view.onShapeClicked.subscribe((shapeInstance: Shape) => {
@@ -62,16 +62,11 @@ export class AppController {
     );
   }
 
-  drawChaoticShape(position: Point): void {
-    const shapeInstance = ShapeFactory.createRandomShape(
-      position,
-      EShapes.Chaotic
-    );
-    this.drawShape(shapeInstance);
-  }
-
   drawRandomShape(position: Point): void {
-    const rand: number = getRandomNum(EShapes.Circle, EShapes.Chaotic);
+    const rand: number = getRandomNum(
+      EShapes.Circle,
+      EShapes.Chaotic + EShapes.Ellipse
+    );
     const shapeInstance = ShapeFactory.createRandomShape(
       position,
       rand as EShapes
