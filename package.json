@@ -1,0 +1,31 @@
+{
+  "name": "serhii_kovalenko",
+  "version": "1.0.0",
+  "description": "Falling Shapes Pixi",
+  "main": "index.ts",
+  "scripts": {
+    "dev": "webpack serve --open",
+    "build": "webpack --config webpack.config.js"
+  },
+  "browser": {
+    "[module-name]": false
+  },
+  "dependencies": {
+    "gsap": "^3.13.0",
+    "pixi.js": "^7.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.4.2",
+    "@types/pixi.js": "^5.0.0",
+    "@types/webpack": "^5.28.1",
+    "@types/webpack-dev-server": "^4.7.2",
+    "html-webpack-plugin": "^5.5.3",
+    "pixi.js-legacy": "^6.0.0",
+    "ts-loader": "^9.4.4",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
+  }
+}
