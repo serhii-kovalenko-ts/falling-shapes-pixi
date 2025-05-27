@@ -58,11 +58,4 @@ export class AppModel {
     this.square = value;
     this.onSquareChanged.notification();
   }
-
-  getRandomSpawnPosition(): Point {
-    return {
-      x: getRandomNum(0, this.config.width),
-      y: getRandomNum(-SPAWN_POSITION, -SPAWN_POSITION),
-    } as Point;
-  }
 }

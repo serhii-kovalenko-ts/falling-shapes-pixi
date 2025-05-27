@@ -11,7 +11,7 @@ import { AppModel } from '../models/App.model';
 import { AppView } from '../views/App.view';
 import { Shape } from '../components/Shape/Shape';
 import { EShapes, ShapeFactory } from '../components/Shape/ShapeFactory';
-import { getRandomNum } from '../utils';
+import { getRandomNum, getRandomSpawnPosition } from '../utils';
 
 export class AppController {
   private view: AppView;
@@ -109,7 +109,7 @@ export class AppController {
 
   createShapes(shapesPerSecond: number): void {
     for (let i = 0; i < shapesPerSecond; i++) {
-      const position: Point = this.model.getRandomSpawnPosition();
+      const position: Point = getRandomSpawnPosition();
       this.drawRandomShape(position);
     }
   }
