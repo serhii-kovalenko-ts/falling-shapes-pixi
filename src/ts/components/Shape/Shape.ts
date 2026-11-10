@@ -1,36 +1,55 @@
-import { Graphics, Point } from 'pixi.js';
-import { getRandomColor } from '../../utils';
+import { Graphics, Point, Rectangle } from "pixi.js";
+import { getRandomColor } from "../../utils/utils";
 
-export class Shape extends Graphics {
-  figure: Graphics;
-  color: number;
+export abstract class Shape {
+  public figure = new Graphics();
+  public color = 0;
+  private area = 0;
+  protected points: number[] = [];
 
-  constructor(position: Point) {
-    super();
+  public constructor(position?: Point) {
+    if (position) {
+      this.reset(position);
+    }
+  }
 
-    this.position = position;
-    this.x = position.x;
-    this.y = position.y;
-
-    this.color = getRandomColor();
-    this.figure = new Graphics();
+  public reset(position: Point): void {
+    this.removeInteraction();
+    this.figure.clear();
+    this.figure.position.copyFrom(position);
+    this.figure.visible = true;
     this.figure.interactive = true;
-    this.figure.lineStyle(4, getRandomColor());
-    this.figure.beginFill(this.color, 0.5);
-
+    this.color = getRandomColor();
+    this.figure.lineStyle(2, 0x202020);
+    this.figure.beginFill(this.color);
     this.draw();
-
-    this.figure.hitArea = this.figure.getBounds();
     this.figure.endFill();
+    this.area = this.calculateArea();
   }
 
-  draw(): void {}
-
-  clone() {
-    //@ts-ignore
-    const cloned = new this.constructor(this.position);
-    cloned.figure.y = this.figure.y;
-
-    return cloned;
+  public removeInteraction(): void {
+    this.figure.removeAllListeners();
+    this.figure.interactive = false;
   }
+
+  public getArea(): number {
+    return this.area;
+  }
+
+  public getBounds(): Rectangle {
+    return this.figure.getBounds();
+  }
+
+  protected calculatePolygonArea(points: number[]): number {
+    let area = 0;
+    for (let i = 0; i < points.length; i += 2) {
+      const next = (i + 2) % points.length;
+      area += points[i] * points[next + 1] - points[next] * points[i + 1];
+    }
+    return Math.abs(area) / 2;
+  }
+
+  protected abstract calculateArea(): number;
+
+  protected abstract draw(): void;
 }

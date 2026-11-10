@@ -1,14 +1,6 @@
-import { Point } from 'pixi.js';
-import { Shape } from './Shape';
-import {
-  Circle,
-  Ellipse,
-  Triangle,
-  Rectangle,
-  Pentagon,
-  Hexagon,
-  Chaotic,
-} from './Shapes';
+import { Point } from "pixi.js";
+import { Shape } from "./Shape";
+import { Circle, Ellipse, Triangle, Rectangle, Pentagon, Hexagon, Star, Chaotic } from "./Shapes";
 
 export enum EShapes {
   Circle = 1,
@@ -17,11 +9,12 @@ export enum EShapes {
   Rectangle,
   Pentagon,
   Hexagon,
+  Star,
   Chaotic,
 }
 
 export class ShapeFactory {
-  static createRandomShape(position: Point, type: EShapes): Shape {
+  public createShape(type: EShapes, position?: Point): Shape {
     switch (type) {
       case EShapes.Circle:
         return new Circle(position);
@@ -35,6 +28,8 @@ export class ShapeFactory {
         return new Pentagon(position);
       case EShapes.Hexagon:
         return new Hexagon(position);
+      case EShapes.Star:
+        return new Star(position);
       case EShapes.Chaotic:
         return new Chaotic(position);
       default:

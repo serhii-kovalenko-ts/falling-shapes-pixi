@@ -1,117 +1,100 @@
-import { getRandomNum } from '../../utils';
-import { Shape } from './Shape';
-import { Point } from 'pixi.js';
+import { getRandomNum } from "../../utils/utils";
+import { Shape } from "./Shape";
 
 export class Circle extends Shape {
-  constructor(position: Point) {
-    super(position);
+  public draw(): void {
+    this.figure.drawCircle(0, 0, 50);
   }
 
-  draw(): void {
-    this.figure.drawCircle(this.x, this.y, 50);
+  protected calculateArea(): number {
+    return Math.PI * 50 * 50;
   }
 }
 
 export class Ellipse extends Shape {
-  constructor(position: Point) {
-    super(position);
+  public draw(): void {
+    this.figure.drawEllipse(0, 0, 80, 30);
   }
 
-  draw(): void {
-    this.figure.drawEllipse(this.x, this.y, 80, 30);
+  protected calculateArea(): number {
+    return Math.PI * 80 * 30;
   }
 }
 
 export class Rectangle extends Shape {
-  constructor(position: Point) {
-    super(position);
+  public draw(): void {
+    this.figure.drawRect(-40, -40, 80, 80);
   }
 
-  draw(): void {
-    this.figure.drawRect(this.x - 40, this.y, 80, 80);
+  protected calculateArea(): number {
+    return 80 * 80;
   }
 }
 
 export class Triangle extends Shape {
-  constructor(position: Point) {
-    super(position);
+  public draw(): void {
+    this.points = [-50, -25, 50, -25, 0, 50];
+    this.figure.drawPolygon(this.points);
   }
 
-  draw(): void {
-    this.figure.drawPolygon([
-      this.x - 50,
-      this.y - 25,
-      this.x + 50,
-      this.y - 25,
-      this.x,
-      this.y + 50,
-    ]);
+  protected calculateArea(): number {
+    return this.calculatePolygonArea(this.points);
   }
 }
 
 export class Pentagon extends Shape {
-  constructor(position: Point) {
-    super(position);
+  public draw(): void {
+    this.points = [50, 0, 20, 40, -40, 40, -40, -40, 20, -40];
+    this.figure.drawPolygon(this.points);
   }
 
-  draw(): void {
-    this.figure.drawPolygon([
-      this.x + 50,
-      this.y,
-      this.x + 20,
-      this.y + 40,
-      this.x - 40,
-      this.y + 40,
-      this.x - 40,
-      this.y - 40,
-      this.x + 20,
-      this.y - 40,
-    ]);
+  protected calculateArea(): number {
+    return this.calculatePolygonArea(this.points);
   }
 }
 
 export class Hexagon extends Shape {
-  constructor(position: Point) {
-    super(position);
+  public draw(): void {
+    this.points = [50, 25, 0, 50, -50, 25, -50, -25, 0, -50, 50, -25];
+    this.figure.drawPolygon(this.points);
   }
 
-  draw(): void {
-    this.figure.drawPolygon([
-      this.x + 50,
-      this.y + 25,
-      this.x,
-      this.y + 50,
-      this.x - 50,
-      this.y + 25,
-      this.x - 50,
-      this.y - 25,
-      this.x,
-      this.y - 50,
-      this.x + 50,
-      this.y - 25,
-    ]);
+  protected calculateArea(): number {
+    return this.calculatePolygonArea(this.points);
+  }
+}
+
+export class Star extends Shape {
+  public draw(): void {
+    this.points = [0, -50, 14, -19, 48, -15, 22, 7, 29, 40, 0, 23, -29, 40, -22, 7, -48, -15, -14, -19];
+    this.figure.drawPolygon(this.points);
+  }
+
+  protected calculateArea(): number {
+    return this.calculatePolygonArea(this.points);
   }
 }
 
 export class Chaotic extends Shape {
-  constructor(position: Point) {
-    super(position);
+  public draw(): void {
+    this.points = [
+      getRandomNum(20, 75),
+      getRandomNum(10, 50),
+      0,
+      getRandomNum(40, 75),
+      getRandomNum(-75, -20),
+      getRandomNum(10, 50),
+      getRandomNum(-75, -20),
+      getRandomNum(-50, -10),
+      0,
+      getRandomNum(-75, -40),
+      getRandomNum(20, 75),
+      getRandomNum(-50, -10),
+    ];
+    this.figure.drawPolygon(this.points);
   }
 
-  draw(): void {
-    this.figure.drawPolygon([
-      getRandomNum(this.x, this.x + 75),
-      getRandomNum(this.y, this.y + 50),
-      getRandomNum(this.x, this.x),
-      getRandomNum(this.y, this.y + 75),
-      getRandomNum(this.x, this.x - 75),
-      getRandomNum(this.y, this.y + 50),
-      getRandomNum(this.x, this.x - 75),
-      getRandomNum(this.y, this.y - 50),
-      getRandomNum(this.x, this.x),
-      getRandomNum(this.y, this.y - 75),
-      getRandomNum(this.x, this.x + 75),
-      getRandomNum(this.y, this.y - 50),
-    ]);
+  protected calculateArea(): number {
+    return this.calculatePolygonArea(this.points);
   }
 }

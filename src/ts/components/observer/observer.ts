@@ -1,18 +1,15 @@
-import { Point } from 'pixi.js';
-import { Shape } from '../Shape/Shape';
+export class Observer<T = void> {
+  private observers: Array<(payload: T) => void> = [];
 
-export class Observer {
-  observers: { (param: Point | Shape): void }[];
-
-  constructor() {
-    this.observers = [];
-  }
-
-  subscribe(callback: { (param: Point | Shape): void }) {
+  public subscribe(callback: (payload: T) => void): void {
     this.observers.push(callback);
   }
 
-  notification(payload?: Point | Shape) {
+  public unsubscribe(callback: (payload: T) => void): void {
+    this.observers = this.observers.filter((observer) => observer !== callback);
+  }
+
+  public notification(payload: T): void {
     this.observers.forEach((callback) => callback(payload));
   }
 }

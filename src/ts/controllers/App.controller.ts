@@ -1,156 +1,103 @@
-/**
- * Controller (Application Logic) - The controller is the glue between the model and the view.
- * The controller processes and responds to events set off by either the model or view.
- * It updates the model whenever the user manipulates the view, and can also be used to update the view whenever
- * the model changes.
- */
-
-import gsap from 'gsap';
-import { Graphics, Point, Rectangle, Ticker } from 'pixi.js';
-import { AppModel } from '../models/App.model';
-import { AppView } from '../views/App.view';
-import { Shape } from '../components/Shape/Shape';
-import { EShapes, ShapeFactory } from '../components/Shape/ShapeFactory';
-import { getRandomNum, getRandomSpawnPosition } from '../utils';
+import { Point, Ticker } from "pixi.js";
+import { AppModel } from "../models/App.model";
+import { AppView } from "../views/App.view";
+import { Shape } from "../components/Shape/Shape";
+import { EShapes } from "../components/Shape/ShapeFactory";
+import { ShapePool } from "../components/pool/ShapePool";
+import { getRandomNum, getRandomSpawnPosition } from "../utils/utils";
+import { MS_PER_SECOND } from "../models/App.model.constants";
 
 export class AppController {
-  private view: AppView;
-  private model: AppModel;
-  shapes: Shape[];
+  private shapes: Shape[] = [];
+  private shapePool = new ShapePool();
+  private spawnAccumulator = 0;
+  private skipNextFrame = false;
+  private ticker = () => this.animate();
 
-  constructor(model: AppModel, view: AppView) {
-    this.model = model;
-    this.view = view;
-    this.shapes = [];
-
-    this.addSubscribes();
-    this.startSpawningShapes();
-
-    Ticker.shared.add((delta: number): void => {
-      this.animate(delta);
-      this.calculateCounters();
+  public constructor(
+    private model: AppModel,
+    private view: AppView,
+  ) {
+    this.subscribeEvents();
+    document.addEventListener("visibilitychange", () => {
+      this.spawnAccumulator = 0;
+      this.skipNextFrame = true;
     });
+    Ticker.shared.add(this.ticker);
+    this.updateShapes();
   }
 
-  addSubscribes(): void {
-    this.view.onIncreaseGravity.subscribe(() =>
-      this.model.setGravity(this.model.gravity + 0.5)
-    );
-
-    this.view.onDecreaseGravity.subscribe(() =>
-      this.model.setGravity(this.model.gravity - 0.5)
-    );
-
-    this.view.onIncreaseShapes.subscribe(() =>
-      this.model.setShapesPerSecond(this.model.shapesPerSecond + 1)
-    );
-
-    this.view.onDecreaseShapes.subscribe(() =>
-      this.model.setShapesPerSecond(this.model.shapesPerSecond - 1)
-    );
-
-    this.view.onCanvasClicked.subscribe((position: Point) =>
-      this.drawRandomShape(position)
-    );
-
-    this.view.onShapeClicked.subscribe((shapeInstance: Shape) => {
-      this.removeShapeAndRedrawSimilar(shapeInstance);
-    });
-
-    this.view.onShapeExit.subscribe((shapeInstance: Shape) =>
-      this.removeShape(shapeInstance)
-    );
-  }
-
-  drawRandomShape(position: Point): void {
-    const rand: number = getRandomNum(
-      EShapes.Circle,
-      EShapes.Chaotic + EShapes.Ellipse
-    );
-    const shapeInstance = ShapeFactory.createRandomShape(
-      position,
-      rand as EShapes
-    );
-    this.drawShape(shapeInstance);
-  }
-
-  drawShape(shapeInstance: Shape): void {
-    this.view.drawShape(shapeInstance);
-    this.shapes.push(shapeInstance);
-  }
-
-  redrawShape(shapeInstance: Shape): void {
-    const newInstance = shapeInstance.clone();
-    this.removeShape(shapeInstance);
-    this.drawShape(newInstance as Shape);
-  }
-
-  removeShape(shapeInstance: Shape): void {
-    this.view.removeShape(shapeInstance);
-    this.shapes = this.shapes.filter((shape: Shape) => shape !== shapeInstance);
-  }
-
-  removeShapeAndRedrawSimilar(shapeInstance: Shape): void {
-    this.removeShape(shapeInstance);
-    this.redrawShapesOfType(shapeInstance.constructor);
-  }
-
-  redrawShapesOfType(shapeType: Function): void {
-    this.shapes.forEach((shapeInstance: Shape) => {
-      if (shapeInstance instanceof shapeType) {
-        this.redrawShape(shapeInstance);
-      }
-    });
-  }
-
-  createShapes(shapesPerSecond: number): void {
-    for (let i = 0; i < shapesPerSecond; i++) {
-      const position: Point = getRandomSpawnPosition();
+  private subscribeEvents(): void {
+    this.view.onIncreaseGravity.subscribe(() => this.model.setGravity(this.model.gravity + 0.5));
+    this.view.onDecreaseGravity.subscribe(() => this.model.setGravity(this.model.gravity - 0.5));
+    this.view.onIncreaseShapes.subscribe(() => this.model.setShapesPerSecond(this.model.shapesPerSecond + 1));
+    this.view.onDecreaseShapes.subscribe(() => this.model.setShapesPerSecond(this.model.shapesPerSecond - 1));
+    this.view.onCanvasClicked.subscribe((position: Point) => {
       this.drawRandomShape(position);
-    }
+      this.updateShapes();
+    });
+    this.view.onShapeClicked.subscribe((shape: Shape) => {
+      this.removeShape(shape);
+      this.updateShapes();
+    });
   }
 
-  startSpawningShapes(): void {
-    this.createShapes(this.model.shapesPerSecond);
-
-    gsap.delayedCall(this.model.config.delayBetweenSpawn, () =>
-      this.startSpawningShapes()
-    );
+  private drawRandomShape(position: Point): void {
+    const type: number = getRandomNum(EShapes.Circle, EShapes.Chaotic + 1) as EShapes;
+    const shape = this.shapePool.getItem(type, position);
+    this.shapes.push(shape);
+    this.view.drawShape(shape);
   }
 
-  calculateCounters(): void {
+  private removeShape(shape: Shape): void {
+    const index = this.shapes.indexOf(shape);
+    if (index === -1) return;
+    this.shapes.splice(index, 1);
+    this.view.removeShape(shape);
+    this.shapePool.releaseItem(shape);
+  }
+
+  private updateShapes(distance = 0): void {
     let count: number = 0;
     let square: number = 0;
 
-    this.shapes.forEach((shapeInstance: Shape): void => {
-      const shape: Graphics = shapeInstance.figure;
-      const position: number =
-        shape.position.y + (shape.hitArea as Rectangle).y;
-      const topPosition: number = position - shape.height;
-      const bottomPosition: number = position + shape.height;
-
-      if (bottomPosition > 0 && topPosition < this.model.config.height) {
-        count++;
-        square += shape.width * shape.height;
+    const { width, height } = this.model.config;
+    for (let i = this.shapes.length - 1; i >= 0; i--) {
+      const shape = this.shapes[i];
+      shape.figure.y += distance;
+      const bounds = shape.getBounds();
+      if (bounds.top >= height) {
+        this.removeShape(shape);
+        continue;
       }
-    });
+      if (bounds.right > 0 && bounds.left < width && bounds.bottom > 0 && bounds.top < height) {
+        count++;
+        square += shape.getArea();
+      }
+    }
 
     this.model.setCount(count);
     this.model.setSquare(Math.round(square));
   }
 
-  animate(delta: number): void {
-    this.shapes.forEach((shapeInstance: Shape): void => {
-      const shape: Graphics = shapeInstance.figure;
+  private animate(): void {
+    if (document.hidden) return;
+    if (this.skipNextFrame) {
+      this.skipNextFrame = false;
+      return;
+    }
 
-      if (
-        shape.position.y >
-        this.model.config.height - (shape.hitArea as Rectangle).y
-      ) {
-        this.removeShape(shapeInstance);
-      } else {
-        shape.position.y += this.model.gravity * delta;
+    const elapsedSeconds = Ticker.shared.elapsedMS / MS_PER_SECOND;
+    this.spawnAccumulator += elapsedSeconds;
+    const rate = this.model.shapesPerSecond;
+    if (rate > 0) {
+      const interval = 1 / rate;
+      while (this.spawnAccumulator >= interval) {
+        this.spawnAccumulator -= interval;
+        this.drawRandomShape(getRandomSpawnPosition(this.model.config.width));
       }
-    });
+    } else this.spawnAccumulator = 0;
+
+    this.updateShapes(this.model.gravity * elapsedSeconds * 60);
   }
 }

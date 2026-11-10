@@ -1,14 +1,24 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
-  mode: 'development',
   entry: {
     index: './src/ts/index.ts',
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'foo.bundle.js',
+    filename: 'app.bundle.js',
+  },
+  optimization: {
+    minimizer: [
+      new TerserPlugin({
+        extractComments: false,
+        terserOptions: {
+          format: { comments: /@preserve|@license|@cc_on|^!/i },
+        },
+      }),
+    ],
   },
   devServer: {
     open: true,
@@ -21,17 +31,18 @@ module.exports = {
   module: {
     rules: [
       {
+        test: /\.css$/i,
+        type: 'asset/resource',
+        generator: { filename: 'styles/[name][ext]' },
+      },
+      {
         test: /\.ts$/,
         use: 'ts-loader',
         exclude: /node_modules/,
       },
       {
         test: /\.(png|jpe?g|gif)$/i,
-        use: [
-          {
-            loader: 'file-loader',
-          },
-        ],
+        type: 'asset/resource',
       },
     ],
   },

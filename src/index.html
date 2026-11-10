@@ -4,99 +4,29 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <style>
-      body {
-        margin: 0;
-        padding: 0;
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-      }
-
-      input {
-        font-size: 28px;
-        width: 100%;
-        max-width: 100px;
-      } 
-
-      .game__shapes-description, .game__gravity-description {
-        padding: 5px;
-        line-height: 30px;
-      }
-
-      .game__header, .game__footer {
-        max-width: 900px;
-        width: 100%;
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-      }
-
-      .score {
-        max-width: 150px;
-        width: 100%;
-        border: 3px solid #000;
-        padding: 5;
-        margin: 0 5px 10px 0;
-      }
-
-      .button {
-        background-color: #ffffff;
-        max-width: 50px;
-        width: 100%;
-        border: 3px solid #000;
-        font-size: 40px;
-        color: #1e90ff;
-        line-height: 0.1;
-        font-weight: 700;
-      }
-
-      .button--left {
-        border-radius: 16px 0 0 16px;
-      }
-
-      .button--right {
-        border-radius: 0 16px 16px 0;
-        margin-right: 5px;
-      }
-
-      .description {
-        padding: 5px;
-        border: 3px solid #000; 
-        line-height: 30px;
-      }
-
-      .radius {
-        border-radius: 12px;
-        margin-right: 5px;
-      } 
-    </style>
+    <link rel="stylesheet" href="<%= require('./css/styles.css') %>" />
     <title><%= htmlWebpackPlugin.options.title %></title>
   </head>
   <body> 
     <div class='game'>
         <div class='game__header'>
             <div class='game__shapes-description radius'>Current Number of Shapes:</div>
-            <input class='game__header-shapes score radius' id='numberOfShapes' readonly></input>
+            <input class='game__header-shapes score radius' id='numberOfShapes' readonly >
             <div class='game__gravity-description radius'>Covered Area (px^2):</div>
-            <input class='game__header-area score radius' id='coveredArea' readonly></input>
+            <input class='game__header-area score radius' id='coveredArea' readonly>
         </div>
 
         <div id='app'></div>
         <div class='game__footer'>
             <button class='game__shapes-decr button button--left' type='button' id='decreaseShapes'>-</button>
             <button class='game__shapes-incr button button--right' type='button' id='increaseShapes'>+</button>
-            <div class='game__shapes-description radius'>Number of Shapes Per Tick:</div>
-            <input class='game__shapes-value description radius' id='shapesValue' readonly></input>
+            <div class='game__shapes-description radius'>Shapes Per Second:</div>
+            <input class='game__shapes-value description radius' id='shapesValue' readonly>
             
             <button class='game__gravity-decr button button--left' type='button' id='decreaseGravity'>-</button>
             <button class='game__gravity-incr button button--right' type='button' id='increaseGravity'>+</button>
             <div class='game__gravity-description radius'>Gravity Value:</div>
-            <input class='game__gravity-value description radius' id='gravityValue' readonly></input>
+            <input class='game__gravity-value description radius' id='gravityValue' readonly>
         </div>
     </div>
   </body>

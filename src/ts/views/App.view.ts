@@ -1,126 +1,116 @@
-/**
- * View (Presentation Layer) - This part of your App has access to the DOM or Canvas.
- * Use it to draw, display or animate whatever you want
- */
-
-import { Application, Rectangle } from 'pixi.js';
-import { Observer } from '../components/observer/observer';
-import { AppModel } from '../models/App.model';
-import * as PIXI from 'pixi.js-legacy';
-import { Shape } from '../components/Shape/Shape';
+import { Application, Rectangle, Container, Point, Graphics } from "pixi.js";
+import { Observer } from "../components/observer/observer";
+import { AppModel } from "../models/App.model";
+import { Shape } from "../components/Shape/Shape";
 
 export class AppView {
-  model: AppModel;
-  app: Application<HTMLCanvasElement>;
+  private app: Application<HTMLCanvasElement>;
 
-  increaseShapes: HTMLButtonElement;
-  decreaseShapes: HTMLButtonElement;
-  increaseGravity: HTMLButtonElement;
-  decreaseGravity: HTMLButtonElement;
+  private increaseShapes!: HTMLButtonElement;
+  private decreaseShapes!: HTMLButtonElement;
+  private increaseGravity!: HTMLButtonElement;
+  private decreaseGravity!: HTMLButtonElement;
 
-  gravityInput: HTMLInputElement;
-  shapesInput: HTMLInputElement;
-  numberOfShapesInput: HTMLInputElement;
-  coveredAreaInput: HTMLInputElement;
+  private gravityInput!: HTMLInputElement;
+  private shapesInput!: HTMLInputElement;
+  private numberOfShapesInput!: HTMLInputElement;
+  private coveredAreaInput!: HTMLInputElement;
 
-  onIncreaseShapes: Observer;
-  onDecreaseShapes: Observer;
-  onIncreaseGravity: Observer;
-  onDecreaseGravity: Observer;
-  onCanvasClicked: Observer;
-  onShapeClicked: Observer;
-  onShapeExit: Observer;
+  public onIncreaseShapes = new Observer();
+  public onDecreaseShapes = new Observer();
+  public onIncreaseGravity = new Observer();
+  public onDecreaseGravity = new Observer();
+  public onCanvasClicked = new Observer<Point>();
+  public onShapeClicked = new Observer<Shape>();
+  private resizeObserver: ResizeObserver;
+  private shapeLayer: Container;
+  private container: HTMLElement;
 
-  constructor(model) {
-    this.model = model;
-
+  public constructor(private model: AppModel) {
     this.app = new Application<HTMLCanvasElement>({
       width: this.model.config.width,
       height: this.model.config.height,
       backgroundColor: 0x7d1e67,
     });
 
-    document.getElementById('app').appendChild(this.app.renderer.view);
+    this.container = this.getHTMLElement("#app");
+    this.container.appendChild(this.app.view);
+    this.shapeLayer = new Container();
+    const mask = new Graphics().beginFill(0xffffff).drawRect(0, 0, this.model.config.width, this.model.config.height).endFill();
+    this.app.stage.addChild(mask, this.shapeLayer);
+    this.shapeLayer.mask = mask;
+    this.resizeCanvas();
+    this.resizeObserver = new ResizeObserver(() => this.resizeCanvas());
+    this.resizeObserver.observe(this.container);
 
     this.initialize();
   }
 
-  createQueryElements(): void {
-    this.increaseShapes = document.querySelector('#increaseShapes');
-    this.decreaseShapes = document.querySelector('#decreaseShapes');
-
-    this.increaseGravity = document.querySelector('#increaseGravity');
-    this.decreaseGravity = document.querySelector('#decreaseGravity');
-
-    this.numberOfShapesInput = document.querySelector('#numberOfShapes');
-    this.coveredAreaInput = document.querySelector('#coveredArea');
-
-    this.gravityInput = document.querySelector('#gravityValue');
-    this.shapesInput = document.querySelector('#shapesValue');
+  private getHTMLElement<T extends HTMLElement>(selector: string): T {
+    const element = document.querySelector<T>(selector);
+    if (!element) {
+      throw new Error(`Element not found: ${selector}`);
+    }
+    return element;
   }
 
-  addListeners(): void {
-    this.onIncreaseShapes = new Observer();
-    this.onDecreaseShapes = new Observer();
+  private createQueryElements(): void {
+    this.increaseShapes = this.getHTMLElement("#increaseShapes");
+    this.decreaseShapes = this.getHTMLElement("#decreaseShapes");
 
-    this.onIncreaseGravity = new Observer();
-    this.onDecreaseGravity = new Observer();
+    this.increaseGravity = this.getHTMLElement("#increaseGravity");
+    this.decreaseGravity = this.getHTMLElement("#decreaseGravity");
 
-    this.onCanvasClicked = new Observer();
-    this.onShapeClicked = new Observer();
-    this.onShapeExit = new Observer();
+    this.numberOfShapesInput = this.getHTMLElement("#numberOfShapes");
+    this.coveredAreaInput = this.getHTMLElement("#coveredArea");
 
-    this.increaseShapes.addEventListener('click', () =>
-      this.onIncreaseShapes.notification()
-    );
-    this.decreaseShapes.addEventListener('click', () =>
-      this.onDecreaseShapes.notification()
-    );
+    this.gravityInput = this.getHTMLElement("#gravityValue");
+    this.shapesInput = this.getHTMLElement("#shapesValue");
+  }
 
-    this.increaseGravity.addEventListener('click', () =>
-      this.onIncreaseGravity.notification()
-    );
-    this.decreaseGravity.addEventListener('click', () =>
-      this.onDecreaseGravity.notification()
-    );
+  private addListeners(): void {
+    this.increaseShapes.addEventListener("click", () => this.onIncreaseShapes.notification());
+    this.decreaseShapes.addEventListener("click", () => this.onDecreaseShapes.notification());
 
-    this.app.stage.on('click', (e) => {
-      const position = e.data.global;
-      this.onCanvasClicked.notification(position);
+    this.increaseGravity.addEventListener("click", () => this.onIncreaseGravity.notification());
+    this.decreaseGravity.addEventListener("click", () => this.onDecreaseGravity.notification());
+
+    this.app.stage.on("pointertap", (e) => {
+      this.onCanvasClicked.notification(e.getLocalPosition(this.app.stage));
     });
   }
 
-  updateInputs(): void {
+  private updateInputs(): void {
     this.updateShapesQuantity();
     this.updateGravity();
     this.updateCount();
     this.updateSquare();
   }
 
-  updateShapesQuantity(): void {
+  private updateShapesQuantity(): void {
     this.shapesInput.value = this.model.shapesPerSecond.toString();
   }
 
-  updateGravity(): void {
+  private updateGravity(): void {
     this.gravityInput.value = this.model.gravity.toString();
   }
 
-  updateCount(): void {
+  private updateCount(): void {
     this.numberOfShapesInput.value = this.model.count.toString();
   }
 
-  updateSquare(): void {
+  private updateSquare(): void {
     this.coveredAreaInput.value = this.model.square.toString();
   }
 
-  subscribeModel(): void {
+  private subscribeModel(): void {
     this.model.onShapesChanged.subscribe(() => this.updateShapesQuantity());
     this.model.onGravityChanged.subscribe(() => this.updateGravity());
     this.model.onCountChanged.subscribe(() => this.updateCount());
     this.model.onSquareChanged.subscribe(() => this.updateSquare());
   }
 
-  initialize(): void {
+  private initialize(): void {
     this.createQueryElements();
 
     this.updateInputs();
@@ -129,28 +119,28 @@ export class AppView {
     this.addListeners();
 
     this.app.stage.interactive = true;
-    this.app.stage.buttonMode = true;
-    this.app.stage.hitArea = new Rectangle(
-      0,
-      0,
-      this.model.config.width,
-      this.model.config.height
-    );
+    this.app.stage.eventMode = "static";
+    this.app.stage.hitArea = new Rectangle(0, 0, this.model.config.width, this.model.config.height);
   }
 
-  drawShape(shapeInstance: Shape): void {
+  public drawShape(shapeInstance: Shape): void {
     const shape = shapeInstance.figure;
-    this.app.stage.addChild(shape);
+    this.shapeLayer.addChild(shape);
 
-    shape.on('click', (e) => {
+    shape.on("pointertap", (e) => {
       e.stopPropagation();
       this.onShapeClicked.notification(shapeInstance);
     });
   }
 
-  removeShape(shapeInstance: Shape): void {
+  public removeShape(shapeInstance: Shape): void {
     const shape = shapeInstance.figure;
-    this.app.stage.removeChild(shape);
-    shape.destroy();
+    this.shapeLayer.removeChild(shape);
+  }
+
+  private resizeCanvas(): void {
+    const scale = Math.min(1, this.container.clientWidth / this.model.config.width);
+    this.app.renderer.view.style.width = `${this.model.config.width * scale}px`;
+    this.app.renderer.view.style.height = `${this.model.config.height * scale}px`;
   }
 }
